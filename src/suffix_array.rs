@@ -151,7 +151,7 @@ where
     <T as TryFrom<usize>>::Error: Debug,
 {
     s.push('\0');
-    let sa = sort_cyclic_shifts(&s)[1..].to_vec();
+    let sa = sort_cyclic_shifts(s)[1..].to_vec();
     s.pop();
     sa
 }
@@ -190,9 +190,7 @@ where
             k += 1;
         }
         lcp[rank[i].into()] = TryFrom::try_from(k).unwrap();
-        if k > 0 {
-            k -= 1;
-        }
+        k = k.saturating_sub(1);
     }
 
     lcp
