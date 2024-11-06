@@ -3,6 +3,19 @@ use core::fmt::Debug;
 
 const ALPHABET: usize = 256;
 
+/// Converts a value to an index. This function is used to convert the values of
+/// the suffix array to indices that can be used to index the target string
+/// and other arrays.
+/// 
+#[inline]
+fn idx<T>(n: T) -> usize 
+where
+    T: TryInto<usize>,
+    <T as TryInto<usize>>::Error: Debug,
+{
+    n.try_into().unwrap()
+}
+
 /// Constructs arrays and performs the sorting of suffix indices for the given 
 /// string.
 /// 
@@ -22,8 +35,9 @@ const ALPHABET: usize = 256;
 fn sort_cyclic_shifts<T>(s: &str) -> Vec<T> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
-        + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
+        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
+    <T as TryInto<usize>>::Error: Debug,
 {
     let zero_t  = T::default();
     let one_t   = TryFrom::try_from(1).unwrap();
@@ -48,52 +62,52 @@ where
     }
     for i in 0..n {
         cnt[s_wrap![i] as usize] -= one_t;
-        p[cnt[s_wrap![i] as usize].into()] = TryFrom::try_from(i).unwrap();
+        p[idx(cnt[s_wrap![i] as usize])] = T::try_from(i).unwrap();
     }
-    c[p[0].into()] = zero_t;
+    c[idx(p[0])] = zero_t;
 
     for i in 1..n {
-        if s_wrap![p[i].into()] != s_wrap![p[i - 1].into()] { 
+        if s_wrap![idx(p[i])] != s_wrap![idx(p[i - 1])] { 
             classes += 1; 
         }
-        c[p[i].into()] = TryFrom::try_from(classes - 1).unwrap();
+        c[idx(p[i])] = T::try_from(classes - 1).unwrap();
     }
 
     let mut h = 0;
 
     while (1 << h) < n {
-        let pow2_t = TryFrom::try_from(1 << h).unwrap();
+        let pow2_t = T::try_from(1 << h).unwrap();
         for i in 0..n {
-            if p[i].into() >= (1 << h) {
+            if idx(p[i]) >= (1 << h) {
                 pn[i] = p[i] - pow2_t;
             } else {
-                pn[i] = TryFrom::try_from(p[i].into() + n - (1 << h)).unwrap();
+                pn[i] = T::try_from(idx(p[i]) + n - (1 << h)).unwrap();
             }
         }
         cnt[0..classes].fill(zero_t);
 
         for i in 0..n {
-            cnt[c[pn[i].into()].into()] += one_t;
+            cnt[idx(c[idx(pn[i])])] += one_t;
         }
         for i in 1..classes {
             cnt[i] = cnt[i] + cnt[i - 1];
         }
         for i in (0..n).rev() {
-            cnt[c[pn[i].into()].into()] -= one_t;
-            p[cnt[c[pn[i].into()].into()].into()] = pn[i];
+            cnt[idx(c[idx(pn[i])])] -= one_t;
+            p[idx(cnt[idx(c[idx(pn[i])])])] = pn[i];
         }
-        cn[p[0].into()] = zero_t;
+        cn[idx(p[0])] = zero_t;
         classes = 1;
 
         for i in 1..n {
-            let curr = (c[p[i].into()], 
-                        c[(p[i].into() + (1 << h)) % n]);
-            let prev = (c[p[i - 1].into()], 
-                        c[(p[i - 1].into() + (1 << h)) % n]);
+            let curr = (c[idx(p[i])], 
+                        c[(idx(p[i]) + (1 << h)) % n]);
+            let prev = (c[idx(p[i - 1])], 
+                        c[(idx(p[i - 1]) + (1 << h)) % n]);
             if curr != prev {
                 classes += 1;
             }
-            cn[p[i].into()] = TryFrom::try_from(classes - 1).unwrap();
+            cn[idx(p[i])] = T::try_from(classes - 1).unwrap();
         }
         std::mem::swap(&mut c, &mut cn);
         h += 1;
@@ -120,8 +134,9 @@ where
 pub fn create_suffix_array<T>(s: &str) -> Vec<T> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
-        + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
+        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
+    <T as TryInto<usize>>::Error: Debug,
 {
     sort_cyclic_shifts(s)[1..].to_vec()
 }
@@ -145,8 +160,9 @@ where
 pub fn create_lcp<T>(s: &str, p: &[T]) -> Vec<T> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
-        + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
+        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
+    <T as TryInto<usize>>::Error: Debug,
 {
     let zero = T::default();
     let n    = s.len();
@@ -156,18 +172,18 @@ where
     let mut k    = 0;
 
     for i in 0..n {
-        rank[p[i].into()] = TryFrom::try_from(i).unwrap();
+        rank[idx(p[i])] = T::try_from(i).unwrap();
     }
     for i in 0..n {
-        if rank[i].into() == n - 1 {
+        if idx(rank[i]) == n - 1 {
             k = 0;
             continue;
         }
-        let j = p[rank[i].into() + 1].into();
+        let j = idx(p[idx(rank[i]) + 1]);
         while i + k < n && j + k < n && s[i + k] == s[j + k] {
             k += 1;
         }
-        lcp[rank[i].into()] = TryFrom::try_from(k).unwrap();
+        lcp[idx(rank[i])] = T::try_from(k).unwrap();
         k = k.saturating_sub(1);
     }
 
