@@ -232,8 +232,8 @@ mod tests {
         // string.
         for i in start..end {
             let j = sa[i] as usize;
-            let sa = &s[j..j + n];
-            assert_eq!(sa, "suffix array");
+            let ss = &s[j..j + n];
+            assert_eq!(ss, "suffix array");
         }
     }
 }
