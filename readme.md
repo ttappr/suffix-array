@@ -20,5 +20,5 @@ represent the largest index in the target string.
 ## Possible changes to be made
 
 The functions may return `Result` types instead of panicking in the future so
-if the wants to dynamically handle errors and use a larger type on failure,
-they can.
+if a developer wants to dynamically handle errors and use a larger type on 
+failure, they can.
