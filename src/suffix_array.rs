@@ -194,7 +194,8 @@ mod tests {
 
         // Adjust the length of s so it can be indexed by u16. The lengh of the
         // target string is considered because `s.as_bytes()[i..i + n]` is used
-        // in the comparison functions.
+        // in the comparison functions, which can overflow if `i + n` is greater
+        // than 2^16.
         s.truncate(65_536 - n);
 
         // Create the suffix array.
