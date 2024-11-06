@@ -43,8 +43,8 @@
 //!   provides a detailed explanation of the LCP array data structure.
 //! 
 
-use std::ops::{AddAssign, SubAssign, Sub, Add};
-use std::fmt::Debug;
+use core::ops::{AddAssign, SubAssign, Sub, Add};
+use core::fmt::Debug;
 
 const ALPHABET: usize = 256;
 
