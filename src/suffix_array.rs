@@ -169,6 +169,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::fs;
 
     #[test]
     fn test_u8_arrays() {
@@ -179,5 +180,51 @@ mod tests {
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
         assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+    }
+
+    #[test]
+    fn test_u16_long_string_from_file() {
+        use std::cmp::Ordering::{self, *};
+
+        let s = fs::read_to_string("./data/sample.txt").unwrap();
+
+        println!("String length: {}", s.as_bytes().len());
+
+        let sa  = create_suffix_array::<u16>(&s);
+
+        // Locate all instances of the substring "suffix array" in the file's
+        // text. Use binary search on the suffix array to find the first 
+        // instance of the prefix indices and the last index of the prefix 
+        // indices.
+
+        let t = "suffix array".as_bytes();
+        let n = t.len();
+
+        let start_fn = |i: &u16| -> Ordering {
+            let i = *i as usize;
+            match s.as_bytes()[i..i + n].cmp(t) {
+                Less => Less,
+                Equal => Greater,
+                Greater => Greater,
+            }
+        };
+
+        let end_fn = |i: &u16| -> Ordering {
+            let i = *i as usize;
+            match s.as_bytes()[i..i + n].cmp(t) {
+                Less => Less,
+                Equal => Less,
+                Greater => Greater,
+            }
+        };
+
+        let start = sa.binary_search_by(start_fn).unwrap_err();
+        let end   = sa.binary_search_by(end_fn).unwrap_err();
+
+        for i in start..end {
+            let j = sa[i] as usize;
+            let sa = &s[j..j + n];
+            assert_eq!(sa, "suffix array");
+        }
     }
 }
