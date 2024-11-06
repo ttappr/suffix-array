@@ -207,6 +207,17 @@ mod tests {
     }
 
     #[test]
+    fn test_u32_arrays() {
+        let s = "banana";
+
+        let sa  = create_suffix_array::<u32>(s);
+        let lcp = create_lcp(&s, &sa);
+
+        assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
+        assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+    }
+
+    #[test]
     fn test_usize_arrays() {
         let s = "banana";
 
