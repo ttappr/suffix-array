@@ -66,16 +66,17 @@ where
         [$i:expr] => { s.get($i).map_or(0, |&v| v) }
     }
 
-    for i in 0..n {
-        cnt[s_wrap![i] as usize] += one_t;
+    for &ch in s.iter().chain([&0]) {
+        cnt[ch as usize] += one_t;
     }
     for i in 1..ALPHABET {
         cnt[i] = cnt[i] + cnt[i - 1];
     }
-    for i in 0..n {
-        cnt[s_wrap![i] as usize] -= one_t;
-        p[idx(cnt[s_wrap![i] as usize])] = tval(i);
+    for (i, &ch) in s.iter().chain([&0]).enumerate() {
+        cnt[ch as usize] -= one_t;
+        p[idx(cnt[ch as usize])] = tval(i);
     }
+
     c[idx(p[0])] = zero_t;
 
     for i in 1..n {
