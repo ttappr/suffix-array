@@ -182,7 +182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_u16_long_string_from_file() {
+    fn test_u16_index_type_with_long_string_from_file() {
         use std::cmp::Ordering::{self, *};
 
         // Read the contents of the file. The file is more than 2^16 bytes long.
