@@ -7,7 +7,7 @@ const ALPHABET: usize = 256;
 /// the suffix array to indices that can be used to index the target string
 /// and other arrays.
 /// 
-#[inline]
+#[inline(always)]
 fn idx<T>(n: T) -> usize 
 where
     T: TryInto<usize>,
@@ -200,6 +200,17 @@ mod tests {
         let s = "banana";
 
         let sa  = create_suffix_array::<u8>(s);
+        let lcp = create_lcp(&s, &sa);
+
+        assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
+        assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+    }
+
+    #[test]
+    fn test_usize_arrays() {
+        let s = "banana";
+
+        let sa  = create_suffix_array::<usize>(s);
         let lcp = create_lcp(&s, &sa);
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
