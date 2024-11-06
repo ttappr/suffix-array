@@ -141,6 +141,11 @@ where
 /// # Arguments
 /// * `s`: A string.
 /// 
+/// # Generic Types
+/// * `T`: The type of the elements in the suffix array. Expected to be one of
+///        the primitive integer types. This type represents the indices of the
+///        sorted suffixes.
+/// 
 /// # Returns
 /// A vector of integers representing the sorted suffixes of the string.
 /// 
@@ -161,6 +166,10 @@ where
 /// # Arguments
 /// * `s`: A string.
 /// * `p`: A reference to the suffix array of the string.
+/// 
+/// # Generic Types
+/// * `T`: The type of the elements in the LCP array. Expected to be one of the
+///        primitive integer types.
 /// 
 /// # Returns
 /// A vector of integers representing the LCP array of the string.
@@ -201,7 +210,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_1() {
+    fn test_u8_arrays() {
         let mut s = String::from("banana");
 
         let sa  = create_suffix_array::<u8>(&mut s);
