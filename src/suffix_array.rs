@@ -16,6 +16,18 @@ where
     n.try_into().unwrap()
 }
 
+/// Converts an index to type T. This function is used to convert the indices of
+/// the suffix array to the type of the suffix array and other internal arrays.
+/// 
+#[inline(always)]
+fn tval<T>(n: usize) -> T 
+where
+    T: TryFrom<usize>,
+    <T as TryFrom<usize>>::Error: Debug,
+{
+    n.try_into().unwrap()
+}
+
 /// Constructs arrays and performs the sorting of suffix indices for the given 
 /// string.
 /// 
@@ -40,7 +52,7 @@ where
     <T as TryInto<usize>>::Error: Debug,
 {
     let zero_t  = T::default();
-    let one_t   = TryFrom::try_from(1).unwrap();
+    let one_t   = tval(1);
     let s       = s.as_bytes();
     let n       = s.len() + 1;
     let mut p   = vec![zero_t; n];
@@ -51,7 +63,7 @@ where
     let mut classes = 1;
 
     macro_rules! s_wrap {
-        [$i:expr] => { if $i == n - 1 { b'\0' } else { s[$i] } }
+        [$i:expr] => { s.get($i).map_or(0, |&v| v) }
     }
 
     for i in 0..n {
@@ -62,7 +74,7 @@ where
     }
     for i in 0..n {
         cnt[s_wrap![i] as usize] -= one_t;
-        p[idx(cnt[s_wrap![i] as usize])] = T::try_from(i).unwrap();
+        p[idx(cnt[s_wrap![i] as usize])] = tval(i);
     }
     c[idx(p[0])] = zero_t;
 
@@ -70,18 +82,18 @@ where
         if s_wrap![idx(p[i])] != s_wrap![idx(p[i - 1])] { 
             classes += 1; 
         }
-        c[idx(p[i])] = T::try_from(classes - 1).unwrap();
+        c[idx(p[i])] = tval(classes - 1);
     }
 
     let mut h = 0;
 
     while (1 << h) < n {
-        let pow2_t = T::try_from(1 << h).unwrap();
+        let pow2_t = tval(1 << h);
         for i in 0..n {
             if idx(p[i]) >= (1 << h) {
                 pn[i] = p[i] - pow2_t;
             } else {
-                pn[i] = T::try_from(idx(p[i]) + n - (1 << h)).unwrap();
+                pn[i] = tval(idx(p[i]) + n - (1 << h));
             }
         }
         cnt[0..classes].fill(zero_t);
@@ -107,7 +119,7 @@ where
             if curr != prev {
                 classes += 1;
             }
-            cn[idx(p[i])] = T::try_from(classes - 1).unwrap();
+            cn[idx(p[i])] = tval(classes - 1);
         }
         std::mem::swap(&mut c, &mut cn);
         h += 1;
@@ -172,7 +184,7 @@ where
     let mut k    = 0;
 
     for i in 0..n {
-        rank[idx(p[i])] = T::try_from(i).unwrap();
+        rank[idx(p[i])] = tval(i);
     }
     for i in 0..n {
         if idx(rank[i]) == n - 1 {
@@ -183,7 +195,7 @@ where
         while i + k < n && j + k < n && s[i + k] == s[j + k] {
             k += 1;
         }
-        lcp[idx(rank[i])] = T::try_from(k).unwrap();
+        lcp[idx(rank[i])] = tval(k);
         k = k.saturating_sub(1);
     }
 

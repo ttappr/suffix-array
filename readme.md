@@ -1,7 +1,8 @@
 # Suffix Arrays
 
 A simple library for constructing suffix and LCP arrays with a reduced memory
-footprint. `create_suffix_array()` is FAST.
+footprint. The primary goal is memory efficiency, but `create_suffix_array()` 
+and `create_lcp_array()` are also very fast.
 
 Sorting a suffix array with O(n log n) time complexity can be costly in terms
 of memory usage. The cyclic sorting algorithm creates five additional arrays
@@ -22,3 +23,6 @@ represent the largest index in the target string.
 The functions may return `Result` types instead of panicking in the future so
 if a developer wants to dynamically handle errors and use a larger type on 
 failure, they can.
+
+A `SuffixArray` struct could be designed to dynamically reallocate to a larger
+index type if the selected one turns out to be too small.
