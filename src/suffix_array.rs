@@ -35,13 +35,7 @@ where
     let mut classes = 1;
 
     macro_rules! s_wrap {
-        [$i:expr] => {
-            if $i == n - 1 {
-                b'\0'
-            } else {
-                s[$i as usize]
-            }
-        }
+        [$i:expr] => { if $i == n - 1 { b'\0' } else { s[$i] } }
     }
 
     for i in 0..n {
