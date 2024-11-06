@@ -13,6 +13,9 @@ const ALPHABET: usize = 256;
 /// * `T`: The type of the elements in the suffix array. Expected to be one of
 ///        the primitive unsigned integer types.
 /// 
+/// # Time Complexity
+/// O(n log n)
+/// 
 /// # Returns
 /// A vector of integers representing the suffix array of the string.
 /// 
@@ -108,6 +111,9 @@ where
 ///        the primitive unsigned integer types. This type represents the 
 ///        indices of the sorted suffixes.
 /// 
+/// # Time Complexity
+/// O(n log n)
+/// 
 /// # Returns
 /// A vector of integers representing the sorted suffixes of the string.
 /// 
@@ -129,6 +135,9 @@ where
 /// # Generic Types
 /// * `T`: The type of the elements in the LCP array. Expected to be one of the
 ///        primitive unsigned integer types.
+/// 
+/// # Time Complexity
+/// O(n)
 /// 
 /// # Returns
 /// A vector of integers representing the LCP array of the string.
