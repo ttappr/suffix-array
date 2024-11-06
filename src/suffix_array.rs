@@ -26,7 +26,6 @@ where
     let one_t   = TryFrom::try_from(1).unwrap();
     let s       = s.as_bytes();
     let n       = s.len() + 1;
-    let n_t: T  = TryFrom::try_from(n).unwrap();
     let mut p   = vec![zero_t; n];
     let mut c   = vec![zero_t; n];
     let mut pn  = vec![zero_t; n];
@@ -65,7 +64,7 @@ where
             if p[i].into() >= (1 << h) {
                 pn[i] = p[i] - pow2_t;
             } else {
-                pn[i] = p[i] + n_t - pow2_t;
+                pn[i] = TryFrom::try_from(p[i].into() + n - (1 << h)).unwrap();
             }
         }
         cnt[0..classes].fill(zero_t);
@@ -186,20 +185,23 @@ mod tests {
     fn test_u16_long_string_from_file() {
         use std::cmp::Ordering::{self, *};
 
-        let s = fs::read_to_string("./data/sample.txt").unwrap();
+        // Read the contents of the file. The file is more than 2^16 bytes long.
+        let mut s = fs::read_to_string("./data/sample.txt").unwrap();
 
-        println!("String length: {}", s.as_bytes().len());
-
-        let sa  = create_suffix_array::<u16>(&s);
-
-        // Locate all instances of the substring "suffix array" in the file's
-        // text. Use binary search on the suffix array to find the first 
-        // instance of the prefix indices and the last index of the prefix 
-        // indices.
-
+        // String to find all occurrence of.
         let t = "suffix array".as_bytes();
         let n = t.len();
 
+        // Adjust the length of s so it can be indexed by u16. The lengh of the
+        // target string is considered because `s.as_bytes()[i..i + n]` is used
+        // in the comparison functions.
+        s.truncate(65_536 - n);
+
+        // Create the suffix array.
+        let sa  = create_suffix_array::<u16>(&s);
+
+        // Leftmost search function to find the start of the target string
+        // indices.
         let start_fn = |i: &u16| -> Ordering {
             let i = *i as usize;
             match s.as_bytes()[i..i + n].cmp(t) {
@@ -209,6 +211,8 @@ mod tests {
             }
         };
 
+        // Rightmost search function to find the end of the target string 
+        // indices.
         let end_fn = |i: &u16| -> Ordering {
             let i = *i as usize;
             match s.as_bytes()[i..i + n].cmp(t) {
@@ -218,9 +222,13 @@ mod tests {
             }
         };
 
+        // Locate the start and end of the indices of the target string in the
+        // suffix array.
         let start = sa.binary_search_by(start_fn).unwrap_err();
         let end   = sa.binary_search_by(end_fn).unwrap_err();
 
+        // Verify that the indices from the suffix array all index the target
+        // string.
         for i in start..end {
             let j = sa[i] as usize;
             let sa = &s[j..j + n];
