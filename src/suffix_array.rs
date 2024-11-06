@@ -11,7 +11,7 @@ const ALPHABET: usize = 256;
 /// 
 /// # Generic Types
 /// * `T`: The type of the elements in the suffix array. Expected to be one of
-///        the primitive integer types.
+///        the primitive unsigned integer types.
 /// 
 /// # Returns
 /// A vector of integers representing the suffix array of the string.
@@ -25,7 +25,7 @@ where
     let zero_t  = T::default();
     let one_t   = TryFrom::try_from(1).unwrap();
     let s       = s.as_bytes();
-    let n       = s.len();
+    let n       = s.len() + 1;
     let n_t: T  = TryFrom::try_from(n).unwrap();
     let mut p   = vec![zero_t; n];
     let mut c   = vec![zero_t; n];
@@ -34,20 +34,30 @@ where
     let mut cnt = vec![zero_t; ALPHABET.max(n)];
     let mut classes = 1;
 
+    macro_rules! s_wrap {
+        [$i:expr] => {
+            if $i == n - 1 {
+                b'\0'
+            } else {
+                s[$i as usize]
+            }
+        }
+    }
+
     for i in 0..n {
-        cnt[s[i] as usize] += one_t;
+        cnt[s_wrap![i] as usize] += one_t;
     }
     for i in 1..ALPHABET {
         cnt[i] = cnt[i] + cnt[i - 1];
     }
     for i in 0..n {
-        cnt[s[i] as usize] -= one_t;
-        p[cnt[s[i] as usize].into()] = TryFrom::try_from(i).unwrap();
+        cnt[s_wrap![i] as usize] -= one_t;
+        p[cnt[s_wrap![i] as usize].into()] = TryFrom::try_from(i).unwrap();
     }
     c[p[0].into()] = zero_t;
 
     for i in 1..n {
-        if s[p[i].into()] != s[p[i - 1].into()] { 
+        if s_wrap![p[i].into()] != s_wrap![p[i - 1].into()] { 
             classes += 1; 
         }
         c[p[i].into()] = TryFrom::try_from(classes - 1).unwrap();
@@ -102,22 +112,19 @@ where
 /// 
 /// # Generic Types
 /// * `T`: The type of the elements in the suffix array. Expected to be one of
-///        the primitive integer types. This type represents the indices of the
-///        sorted suffixes.
+///        the primitive unsigned integer types. This type represents the 
+///        indices of the sorted suffixes.
 /// 
 /// # Returns
 /// A vector of integers representing the sorted suffixes of the string.
 /// 
-pub fn create_suffix_array<T>(s: &mut String) -> Vec<T> 
+pub fn create_suffix_array<T>(s: &str) -> Vec<T> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
 {
-    s.push('\0');
-    let sa = sort_cyclic_shifts(s)[1..].to_vec();
-    s.pop();
-    sa
+    sort_cyclic_shifts(s)[1..].to_vec()
 }
 
 /// Constructs the LCP array of a string.
@@ -128,7 +135,7 @@ where
 /// 
 /// # Generic Types
 /// * `T`: The type of the elements in the LCP array. Expected to be one of the
-///        primitive integer types.
+///        primitive unsigned integer types.
 /// 
 /// # Returns
 /// A vector of integers representing the LCP array of the string.
@@ -171,9 +178,9 @@ mod tests {
 
     #[test]
     fn test_u8_arrays() {
-        let mut s = String::from("banana");
+        let s = "banana";
 
-        let sa  = create_suffix_array::<u8>(&mut s);
+        let sa  = create_suffix_array::<u8>(s);
         let lcp = create_lcp(&s, &sa);
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
