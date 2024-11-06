@@ -37,6 +37,11 @@
 //!   provides an implementation of the suffix array and LCP array construction
 //!   algorithms in C++. The implementation in this module is based on the
 //!   implementation provided in the link.
+//! - [Wikipedia](https://en.wikipedia.org/wiki/Suffix_array) provides a
+//!   detailed explanation of the suffix array data structure.
+//! - [Wikipedia](https://en.wikipedia.org/wiki/Longest_common_prefix_array)
+//!   provides a detailed explanation of the LCP array data structure.
+//! 
 
 use std::ops::{AddAssign, SubAssign, Sub, Add};
 use std::fmt::Debug;
