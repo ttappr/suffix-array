@@ -12,9 +12,7 @@ is 8 bytes. So there could be 40 additional bytes per byte in the target string.
 The functions in this crate are designed to allow the index type to be
 specified. If the target string is less than 65,536 characters, an index type
 of `u16` will use 1/4 the memory as five internal arrays that have `usize` 
-elements for sorting. Some experimentation needs to be done to find the exact 
-length a `u16` index can hande, but it is close to 65,536. It's safe to assume 
-1K less can be safely handled.
+elements for sorting.
 
 The caller will have to ensure that the internal array type is large enough to
 represent the largest index in the target string.
