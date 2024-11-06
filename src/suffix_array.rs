@@ -22,14 +22,15 @@ where
         + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
 {
+    let zero = T::default();
     let one = TryFrom::try_from(1).unwrap();
     let n = s.len();
     let s = s.as_bytes();
-    let mut p = vec![T::default(); n];
-    let mut c = vec![T::default(); n];
-    let mut pn = vec![T::default(); n];
-    let mut cn = vec![T::default(); n];
-    let mut cnt = vec![T::default(); ALPHABET.max(n)];
+    let mut p = vec![zero; n];
+    let mut c = vec![zero; n];
+    let mut pn = vec![zero; n];
+    let mut cn = vec![zero; n];
+    let mut cnt = vec![zero; ALPHABET.max(n)];
     let mut classes = 1;
 
     for i in 0..n {
@@ -42,7 +43,7 @@ where
         cnt[s[i] as usize] -= one;
         p[cnt[s[i] as usize].into()] = TryFrom::try_from(i).unwrap();
     }
-    c[p[0].into()] = T::default();
+    c[p[0].into()] = zero;
 
     for i in 1..n {
         if s[p[i].into()] != s[p[i - 1].into()] { 
@@ -61,7 +62,7 @@ where
                 pn[i] = TryFrom::try_from(p[i].into() + n - (1 << h)).unwrap();
             }
         }
-        cnt[0..classes].fill(T::default());
+        cnt[0..classes].fill(zero);
 
         for i in 0..n {
             cnt[c[pn[i].into()].into()] += one;
@@ -73,7 +74,7 @@ where
             cnt[c[pn[i].into()].into()] -= one;
             p[cnt[c[pn[i].into()].into()].into()] = pn[i];
         }
-        cn[p[0].into()] = T::default();
+        cn[p[0].into()] = zero;
         classes = 1;
 
         for i in 1..n {
@@ -136,10 +137,11 @@ where
         + Into<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
 {
+    let zero = T::default();
     let n = s.len();
     let s = s.as_bytes();
-    let mut rank = vec![T::default(); n];
-    let mut lcp = vec![T::default(); n - 1];
+    let mut rank = vec![zero; n];
+    let mut lcp = vec![zero; n - 1];
     let mut k = 0;
 
     for i in 0..n {
