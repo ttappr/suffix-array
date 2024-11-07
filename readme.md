@@ -20,9 +20,5 @@ represent the largest index in the target string.
 
 ## Possible changes to be made
 
-The functions may return `Result` types instead of panicking in the future so
-if a developer wants to dynamically handle errors and use a larger type on 
-failure, they can.
-
 A `SuffixArray` struct could be designed to dynamically reallocate to a larger
 index type if the selected one turns out to be too small.

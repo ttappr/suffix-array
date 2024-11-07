@@ -1,33 +1,8 @@
 use core::ops::{AddAssign, SubAssign, Sub, Add};
-use core::fmt::Debug;
+use core::fmt::{self, Debug};
 use core::iter::once;
 
 const ALPHABET: usize = 256;
-
-/// Converts a value to an index. This function is used to convert the values of
-/// the suffix array to indices that can be used to index the target string
-/// and other arrays.
-/// 
-#[inline(always)]
-fn idx<T>(n: T) -> usize 
-where
-    T: TryInto<usize>,
-    <T as TryInto<usize>>::Error: Debug,
-{
-    n.try_into().unwrap()
-}
-
-/// Converts an index to type T. This function is used to convert the indices of
-/// the suffix array to the type of the suffix array and other internal arrays.
-/// 
-#[inline(always)]
-fn tval<T>(n: usize) -> T 
-where
-    T: TryFrom<usize>,
-    <T as TryFrom<usize>>::Error: Debug,
-{
-    n.try_into().unwrap()
-}
 
 /// Constructs arrays and performs the sorting of suffix indices for the given 
 /// string.
@@ -43,9 +18,11 @@ where
 /// O(n log n)
 /// 
 /// # Returns
-/// A vector of integers representing the suffix array of the string.
+/// A vector of integers representing the suffix array of the string, or 
+/// `CastError` if the conversion of the indices to type `T` (or vice versa) 
+/// fails during construction.
 /// 
-fn sort_cyclic_shifts<T>(s: &str) -> Vec<T> 
+fn sort_cyclic_shifts<T>(s: &str) -> Result<Vec<T>, CastError>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
@@ -53,7 +30,7 @@ where
     <T as TryInto<usize>>::Error: Debug,
 {
     let zero_t  = T::default();
-    let one_t   = tval(1);
+    let one_t   = tval(1)?;
     let s       = s.as_bytes();
     let n       = s.len() + 1;
     let mut p   = vec![zero_t; n];
@@ -75,58 +52,58 @@ where
     }
     for (i, &ch) in s.iter().chain(once(&0)).enumerate() {
         cnt[ch as usize] -= one_t;
-        p[idx(cnt[ch as usize])] = tval(i);
+        p[idx(cnt[ch as usize])?] = tval(i)?;
     }
 
-    c[idx(p[0])] = zero_t;
+    c[idx(p[0])?] = zero_t;
 
     for i in 1..n {
-        if s_wrap![idx(p[i])] != s_wrap![idx(p[i - 1])] { 
+        if s_wrap![idx(p[i])?] != s_wrap![idx(p[i - 1])?] { 
             classes += 1; 
         }
-        c[idx(p[i])] = tval(classes - 1);
+        c[idx(p[i])?] = tval(classes - 1)?;
     }
 
     let mut h = 0;
 
     while (1 << h) < n {
-        let pow2_t = tval(1 << h);
+        let pow2_t = tval(1 << h)?;
         for i in 0..n {
-            if idx(p[i]) >= (1 << h) {
+            if idx(p[i])? >= (1 << h) {
                 pn[i] = p[i] - pow2_t;
             } else {
-                pn[i] = tval(idx(p[i]) + n - (1 << h));
+                pn[i] = tval(idx(p[i])? + n - (1 << h))?;
             }
         }
         cnt[0..classes].fill(zero_t);
 
         for i in 0..n {
-            cnt[idx(c[idx(pn[i])])] += one_t;
+            cnt[idx(c[idx(pn[i])?])?] += one_t;
         }
         for i in 1..classes {
             cnt[i] = cnt[i] + cnt[i - 1];
         }
         for i in (0..n).rev() {
-            cnt[idx(c[idx(pn[i])])] -= one_t;
-            p[idx(cnt[idx(c[idx(pn[i])])])] = pn[i];
+            cnt[idx(c[idx(pn[i])?])?] -= one_t;
+            p[idx(cnt[idx(c[idx(pn[i])?])?])?] = pn[i];
         }
-        cn[idx(p[0])] = zero_t;
+        cn[idx(p[0])?] = zero_t;
         classes = 1;
 
         for i in 1..n {
-            let curr = (c[idx(p[i])], 
-                        c[(idx(p[i]) + (1 << h)) % n]);
-            let prev = (c[idx(p[i - 1])], 
-                        c[(idx(p[i - 1]) + (1 << h)) % n]);
+            let curr = (c[idx(p[i])?], 
+                        c[(idx(p[i])? + (1 << h)) % n]);
+            let prev = (c[idx(p[i - 1])?], 
+                        c[(idx(p[i - 1])? + (1 << h)) % n]);
             if curr != prev {
                 classes += 1;
             }
-            cn[idx(p[i])] = tval(classes - 1);
+            cn[idx(p[i])?] = tval(classes - 1)?;
         }
         std::mem::swap(&mut c, &mut cn);
         h += 1;
     }
-    p
+    Ok(p)
 }
 
 /// Constructs the suffix array of a string.
@@ -143,16 +120,18 @@ where
 /// O(n log n)
 /// 
 /// # Returns
-/// A vector of integers representing the sorted suffixes of the string.
+/// A vector of integers representing the sorted suffixes of the string, or
+/// `CastError` if the conversion of the indices to type `T` (or vice versa)
+/// fails during construction.
 /// 
-pub fn create_suffix_array<T>(s: &str) -> Vec<T> 
+pub fn create_suffix_array<T>(s: &str) -> Result<Vec<T>, CastError>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
     <T as TryFrom<usize>>::Error: Debug,
     <T as TryInto<usize>>::Error: Debug,
 {
-    sort_cyclic_shifts(s)[1..].to_vec()
+    Ok(sort_cyclic_shifts(s)?[1..].to_vec())
 }
 
 /// Constructs the LCP array of a string.
@@ -169,9 +148,11 @@ where
 /// O(n)
 /// 
 /// # Returns
-/// A vector of integers representing the LCP array of the string.
+/// A vector of integers representing the LCP array of the string, or 
+/// `CastError` if the conversion of the indices to type `T` (or vice versa)
+/// fails during construction.
 /// 
-pub fn create_lcp<T>(s: &str, p: &[T]) -> Vec<T> 
+pub fn create_lcp<T>(s: &str, p: &[T]) -> Result<Vec<T>, CastError> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
@@ -186,23 +167,57 @@ where
     let mut k    = 0;
 
     for i in 0..n {
-        rank[idx(p[i])] = tval(i);
+        rank[idx(p[i])?] = tval(i)?;
     }
     for i in 0..n {
-        if idx(rank[i]) == n - 1 {
+        if idx(rank[i])? == n - 1 {
             k = 0;
             continue;
         }
-        let j = idx(p[idx(rank[i]) + 1]);
+        let j = idx(p[idx(rank[i])? + 1])?;
         while i + k < n && j + k < n && s[i + k] == s[j + k] {
             k += 1;
         }
-        lcp[idx(rank[i])] = tval(k);
+        lcp[idx(rank[i])?] = tval(k)?;
         k = k.saturating_sub(1);
     }
 
-    lcp
+    Ok(lcp)
 }
+
+/// Converts a value to an index. This function is used to convert the values of
+/// the suffix array to indices that can be used to index the target string
+/// and other arrays.
+/// 
+#[inline(always)]
+fn idx<T>(n: T) -> Result<usize, CastError>
+where
+    T: TryInto<usize>,
+    <T as TryInto<usize>>::Error: Debug,
+{
+    n.try_into().map_err(|e| CastError(format!("{:?}", e)))
+}
+
+/// Converts an index to type T. This function is used to convert the indices of
+/// the suffix array to the type of the suffix array and other internal arrays.
+/// 
+#[inline(always)]
+fn tval<T>(n: usize) -> Result<T, CastError>
+where
+    T: TryFrom<usize>,
+    <T as TryFrom<usize>>::Error: Debug,
+{
+    n.try_into().map_err(|e| CastError(format!("{:?}", e)))
+}
+
+pub struct CastError(pub String);
+
+impl Debug for CastError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -213,8 +228,8 @@ mod tests {
     fn test_u8_arrays() {
         let s = "banana";
 
-        let sa  = create_suffix_array::<u8>(s);
-        let lcp = create_lcp(&s, &sa);
+        let sa  = create_suffix_array::<u8>(s).unwrap();
+        let lcp = create_lcp(&s, &sa).unwrap();
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
         assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
@@ -224,8 +239,8 @@ mod tests {
     fn test_u32_arrays() {
         let s = "banana";
 
-        let sa  = create_suffix_array::<u32>(s);
-        let lcp = create_lcp(&s, &sa);
+        let sa  = create_suffix_array::<u32>(s).unwrap();
+        let lcp = create_lcp(&s, &sa).unwrap();
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
         assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
@@ -235,8 +250,8 @@ mod tests {
     fn test_usize_arrays() {
         let s = "banana";
 
-        let sa  = create_suffix_array::<usize>(s);
-        let lcp = create_lcp(&s, &sa);
+        let sa  = create_suffix_array::<usize>(s).unwrap();
+        let lcp = create_lcp(&s, &sa).unwrap();
 
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
         assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
@@ -260,7 +275,7 @@ mod tests {
         s.truncate(65_536 - n);
 
         // Create the suffix array.
-        let sa  = create_suffix_array::<u16>(&s);
+        let sa  = create_suffix_array::<u16>(&s).unwrap();
 
         // Leftmost search function to find the start of the target string
         // indices.
@@ -298,3 +313,6 @@ mod tests {
         }
     }
 }
+
+
+

@@ -25,8 +25,8 @@
 //! use suffix_array::*;
 //! 
 //! let mut s = String::from("banana");
-//! let sa = create_suffix_array::<u8>(&mut s);
-//! let lcp = create_lcp(&s, &sa);
+//! let sa = create_suffix_array::<u8>(&mut s).unwrap();
+//! let lcp = create_lcp(&s, &sa).unwrap();
 //! 
 //! assert_eq!(sa, vec![5, 3, 1, 0, 4, 2]);
 //! assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
