@@ -21,10 +21,10 @@ const ALPHABET: usize = 256;
 /// 
 /// # Returns
 /// A vector of integers representing the suffix array of the string, or 
-/// `CastError` if the conversion of the indices to type `T` (or vice versa) 
+/// `TError` if the conversion of the indices to type `T` (or vice versa) 
 /// fails during construction.
 /// 
-fn sort_cyclic_shifts<T>(s: &str) -> Result<Vec<T>, CastError>
+fn sort_cyclic_shifts<T>(s: &str) -> Result<Vec<T>, TError>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
@@ -47,10 +47,10 @@ where
     }
 
     for &ch in s.iter().chain(once(&0)) {
-        cnt[ch as usize] += one_t;
+        cnt[ch as usize] = fallable_add(cnt[ch as usize], one_t)?;
     }
     for i in 1..ALPHABET {
-        cnt[i] = cnt[i] + cnt[i - 1];
+        cnt[i] = fallable_add(cnt[i], cnt[i - 1])?;
     }
     for (i, &ch) in s.iter().chain(once(&0)).enumerate() {
         cnt[ch as usize] -= one_t;
@@ -82,11 +82,12 @@ where
             cnt[idx(c[idx(pn[i])?])?] += one_t;
         }
         for i in 1..classes {
-            cnt[i] = cnt[i] + cnt[i - 1];
+            cnt[i] = fallable_add(cnt[i], cnt[i - 1])?;
         }
         for i in (0..n).rev() {
-            cnt[idx(c[idx(pn[i])?])?] -= one_t;
-            p[idx(cnt[idx(c[idx(pn[i])?])?])?] = pn[i];
+            let v = &mut cnt[idx(c[idx(pn[i])?])?];
+            *v -= one_t;
+            p[idx(*v)?] = pn[i];
         }
         cn[idx(p[0])?] = zero_t;
         classes = 1;
@@ -122,10 +123,10 @@ where
 /// 
 /// # Returns
 /// A vector of integers representing the sorted suffixes of the string, or
-/// `CastError` if the conversion of the indices to type `T` (or vice versa)
+/// `TError` if the conversion of the indices to type `T` (or vice versa)
 /// fails during construction.
 /// 
-pub fn create_suffix_array<T>(s: &str) -> Result<Vec<T>, CastError>
+pub fn create_suffix_array<T>(s: &str) -> Result<Vec<T>, TError>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
@@ -150,10 +151,10 @@ where
 /// 
 /// # Returns
 /// A vector of integers representing the LCP array of the string, or 
-/// `CastError` if the conversion of the indices to type `T` (or vice versa)
+/// `TError` if the conversion of the indices to type `T` (or vice versa)
 /// fails during construction.
 /// 
-pub fn create_lcp<T>(s: &str, p: &[T]) -> Result<Vec<T>, CastError> 
+pub fn create_lcp<T>(s: &str, p: &[T]) -> Result<Vec<T>, TError> 
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
@@ -191,36 +192,81 @@ where
 /// and other arrays.
 /// 
 #[inline(always)]
-fn idx<T>(n: T) -> Result<usize, CastError>
+fn idx<T>(n: T) -> Result<usize, TError>
 where
     T: TryInto<usize>,
     <T as TryInto<usize>>::Error: Debug,
 {
-    n.try_into().map_err(|e| CastError(format!("{:?}", e)))
+    n.try_into().map_err(|e| TError(format!("{:?}", e)))
 }
 
 /// Converts an index to type T. This function is used to convert the indices of
 /// the suffix array to the type of the suffix array and other internal arrays.
 /// 
 #[inline(always)]
-fn tval<T>(n: usize) -> Result<T, CastError>
+fn tval<T>(n: usize) -> Result<T, TError>
 where
     T: TryFrom<usize>,
     <T as TryFrom<usize>>::Error: Debug,
 {
-    n.try_into().map_err(|e| CastError(format!("{:?}", e)))
+    n.try_into().map_err(|e| TError(format!("{:?}", e)))
 }
 
-#[derive(Debug)]
-pub struct CastError(pub String);
+/// A fallable subtraction function that returns an error if the subtraction
+/// operation underflows. (currently unused in this module)
+/// 
+#[allow(dead_code)]
+#[inline(always)]
+fn fallable_sub<T>(a: T, b: T) -> Result<T, TError>
+where
+    T: TryInto<usize> + TryFrom<usize> + Sub<Output=T> + Debug + Copy,
+    <T as TryInto<usize>>::Error: Debug,
+    <T as TryFrom<usize>>::Error: Debug,
+{
+    use format as f;
+    if let Some(c) = idx(a).unwrap().checked_sub(idx(b).unwrap()) {
+        tval(c).map_err(|_e| TError(f!("Underflow during subtraction,
+                                              ({:?} - {:?}).", a, b)))
+    } else {
+        Err(TError(f!("Underflow during subtraction,
+                              ({:?} - {:?}).", a, b)))
+    }
+}
 
-impl Error for CastError {
+/// A fallable addition function that returns an error if the addition operation
+/// overflows.
+/// 
+#[inline(always)]
+fn fallable_add<T>(a: T, b: T) -> Result<T, TError>
+where
+    T: TryInto<usize> + TryFrom<usize> + Add<Output=T> + Debug + Copy,
+    <T as TryInto<usize>>::Error: Debug,
+    <T as TryFrom<usize>>::Error: Debug,
+{
+    use format as f;
+    if let Some(c) = idx(a).unwrap().checked_add(idx(b).unwrap()) {
+        tval(c).map_err(|_e| TError(f!("Overflow during addition, 
+                                              ({:?} + {:?}).", a, b)))
+    } else {
+        Err(TError(f!("Overflow during addition, 
+                              ({:?} + {:?}).", a, b)))
+    }
+}
+
+/// A generalized error type that represent errors related to the choice of 
+/// index type (also, array value type) used in the suffix array and LCP array 
+/// construction.
+/// 
+#[derive(Debug)]
+pub struct TError(pub String);
+
+impl Error for TError {
     fn description(&self) -> &str {
         &self.0
     }
 }
 
-impl Display for CastError {
+impl Display for TError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "{}", self.0)
     }

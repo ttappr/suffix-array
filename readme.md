@@ -22,9 +22,3 @@ represent the largest index in the target string.
 
 A `SuffixArray` struct could be designed to dynamically reallocate to a larger
 index type if the selected one turns out to be too small.
-
-The `CastError` type returned by functions may change. The code currently 
-doesn't use checked add or sub functions, so it's possible that a panic could
-occur during the construction of a suffix array due to overflow or underflow.
-A more general error type may be implemented in the future to represent cast
-and overflow errors.
