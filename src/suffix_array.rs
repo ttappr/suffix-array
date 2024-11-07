@@ -225,11 +225,11 @@ where
 {
     use format as f;
     if let Some(c) = idx(a).unwrap().checked_sub(idx(b).unwrap()) {
-        tval(c).map_err(|_e| TError(f!("Underflow during subtraction,
-                                              ({:?} - {:?}).", a, b)))
+        tval(c).map_err(|_e| TError(f!("Underflow during subtraction, \
+                                        ({:?} - {:?}).", a, b)))
     } else {
-        Err(TError(f!("Underflow during subtraction,
-                              ({:?} - {:?}).", a, b)))
+        Err(TError(f!("Underflow during subtraction, \
+                       ({:?} - {:?}).", a, b)))
     }
 }
 
@@ -245,11 +245,11 @@ where
 {
     use format as f;
     if let Some(c) = idx(a).unwrap().checked_add(idx(b).unwrap()) {
-        tval(c).map_err(|_e| TError(f!("Overflow during addition, 
-                                              ({:?} + {:?}).", a, b)))
+        tval(c).map_err(|_e| TError(f!("Overflow during addition, \
+                                        ({:?} + {:?}).", a, b)))
     } else {
-        Err(TError(f!("Overflow during addition, 
-                              ({:?} + {:?}).", a, b)))
+        Err(TError(f!("Overflow during addition, \
+                       ({:?} + {:?}).", a, b)))
     }
 }
 
