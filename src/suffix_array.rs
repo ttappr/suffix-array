@@ -2,6 +2,7 @@ use core::ops::{AddAssign, SubAssign, Sub, Add};
 use core::fmt::{self, Debug, Display};
 use core::iter::once;
 use core::error::Error;
+use core::mem::swap;
 
 const ALPHABET: usize = 256;
 
@@ -100,7 +101,7 @@ where
             }
             cn[idx(p[i])?] = tval(classes - 1)?;
         }
-        std::mem::swap(&mut c, &mut cn);
+        swap(&mut c, &mut cn);
         h += 1;
     }
     Ok(p)
