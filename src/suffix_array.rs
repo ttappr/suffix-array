@@ -260,13 +260,9 @@ where
 /// construction.
 /// 
 #[derive(Debug)]
-pub struct TError(pub String);
+pub struct TError(String);
 
-impl Error for TError {
-    fn description(&self) -> &str {
-        &self.0
-    }
-}
+impl Error for TError { }
 
 impl Display for TError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
