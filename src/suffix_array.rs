@@ -67,10 +67,9 @@ where
     let mut h = 0;
 
     while (1 << h) < n {
-        let pow2_t = tval(1 << h)?;
         for i in 0..n {
             if idx(p[i])? >= (1 << h) {
-                pn[i] = p[i] - pow2_t;
+                pn[i] = p[i] - tval(1 << h)?;
             } else {
                 pn[i] = tval(idx(p[i])? + n - (1 << h))?;
             }
