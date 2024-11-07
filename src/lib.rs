@@ -26,7 +26,7 @@
 //!
 //! let target = "banana";
 //!
-//! if let Ok(sa) = create_suffix_array::<u8>(target) {
+//! if let Some(sa) = create_suffix_array::<u8>(target) {
 //! 
 //!     let lcp = create_lcp(target, &sa).unwrap();
 //! 

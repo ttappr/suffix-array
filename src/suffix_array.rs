@@ -1,7 +1,6 @@
 use core::ops::{AddAssign, SubAssign, Sub, Add};
-use core::fmt::{self, Debug, Display};
+use core::fmt::Debug;
 use core::iter::once;
-use core::error::Error;
 use core::mem::swap;
 
 const ALPHABET: usize = 256;
@@ -22,15 +21,13 @@ const ALPHABET: usize = 256;
 /// 
 /// # Returns
 /// A vector of integers representing the suffix array of the string, or 
-/// `TError` if the conversion of the indices to type `T` (or vice versa) 
+/// `None` if the conversion of the indices to type `T` (or vice versa) 
 /// fails during construction.
 /// 
-fn sort_cyclic_shifts<T>(s: &str) -> Result<Vec<T>, TError>
+pub (crate) fn sort_cyclic_shifts<T>(s: &str) -> Option<Vec<T>>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
-    <T as TryFrom<usize>>::Error: Debug,
-    <T as TryInto<usize>>::Error: Debug,
 {
     let zero_t  = T::default();
     let one_t   = tval(1)?;
@@ -107,7 +104,7 @@ where
         swap(&mut c, &mut cn);
         h += 1;
     }
-    Ok(p)
+    Some(p)
 }
 
 /// Constructs the suffix array of a string.
@@ -125,17 +122,15 @@ where
 /// 
 /// # Returns
 /// A vector of integers representing the sorted suffixes of the string, or
-/// `TError` if the conversion of the indices to type `T` (or vice versa)
+/// `None` if the conversion of the indices to type `T` (or vice versa)
 /// fails during construction.
 /// 
-pub fn create_suffix_array<T>(s: &str) -> Result<Vec<T>, TError>
+pub fn create_suffix_array<T>(s: &str) -> Option<Vec<T>>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
-    <T as TryFrom<usize>>::Error: Debug,
-    <T as TryInto<usize>>::Error: Debug,
 {
-    Ok(sort_cyclic_shifts(s)?[1..].to_vec())
+    Some(sort_cyclic_shifts(s)?[1..].to_vec())
 }
 
 /// Constructs the LCP array of a string.
@@ -153,15 +148,13 @@ where
 /// 
 /// # Returns
 /// A vector of integers representing the LCP array of the string, or 
-/// `TError` if the conversion of the indices to type `T` (or vice versa)
+/// `None` if the conversion of the indices to type `T` (or vice versa)
 /// fails during construction.
 /// 
-pub fn create_lcp<T>(s: &str, p: &[T]) -> Result<Vec<T>, TError> 
+pub fn create_lcp<T>(s: &str, p: &[T]) -> Option<Vec<T>>
 where
     T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
-    <T as TryFrom<usize>>::Error: Debug,
-    <T as TryInto<usize>>::Error: Debug,
 {
     let zero = T::default();
     let n    = s.len();
@@ -186,7 +179,7 @@ where
         k = k.saturating_sub(1);
     }
 
-    Ok(lcp)
+    Some(lcp)
 }
 
 /// Converts a value to an index. This function is used to convert the values of
@@ -194,24 +187,22 @@ where
 /// and other arrays.
 /// 
 #[inline(always)]
-fn idx<T>(n: T) -> Result<usize, TError>
+fn idx<T>(n: T) -> Option<usize>
 where
     T: TryInto<usize>,
-    <T as TryInto<usize>>::Error: Debug,
 {
-    n.try_into().map_err(|e| TError(format!("{:?}", e)))
+    n.try_into().ok()
 }
 
 /// Converts an index to type T. This function is used to convert the indices of
 /// the suffix array to the type of the suffix array and other internal arrays.
 /// 
 #[inline(always)]
-fn tval<T>(n: usize) -> Result<T, TError>
+fn tval<T>(n: usize) -> Option<T>
 where
     T: TryFrom<usize>,
-    <T as TryFrom<usize>>::Error: Debug,
 {
-    n.try_into().map_err(|e| TError(format!("{:?}", e)))
+    n.try_into().ok()
 }
 
 /// A fallable subtraction function that returns an error if the subtraction
@@ -219,55 +210,22 @@ where
 /// 
 #[allow(dead_code)]
 #[inline(always)]
-fn fallable_sub<T>(a: T, b: T) -> Result<T, TError>
+fn fallable_sub<T>(a: T, b: T) -> Option<T>
 where
     T: TryInto<usize> + TryFrom<usize> + Sub<Output=T> + Debug + Copy,
-    <T as TryInto<usize>>::Error: Debug,
-    <T as TryFrom<usize>>::Error: Debug,
 {
-    use format as f;
-    if let Some(c) = idx(a).unwrap().checked_sub(idx(b).unwrap()) {
-        tval(c).map_err(|_e| TError(f!("Underflow during subtraction, \
-                                        ({:?} - {:?}).", a, b)))
-    } else {
-        Err(TError(f!("Underflow during subtraction, \
-                       ({:?} - {:?}).", a, b)))
-    }
+    idx(a)?.checked_sub(idx(b)?).and_then(|c| tval(c))
 }
 
 /// A fallable addition function that returns an error if the addition operation
 /// overflows.
 /// 
 #[inline(always)]
-fn fallable_add<T>(a: T, b: T) -> Result<T, TError>
+fn fallable_add<T>(a: T, b: T) -> Option<T>
 where
     T: TryInto<usize> + TryFrom<usize> + Add<Output=T> + Debug + Copy,
-    <T as TryInto<usize>>::Error: Debug,
-    <T as TryFrom<usize>>::Error: Debug,
 {
-    use format as f;
-    if let Some(c) = idx(a).unwrap().checked_add(idx(b).unwrap()) {
-        tval(c).map_err(|_e| TError(f!("Overflow during addition, \
-                                        ({:?} + {:?}).", a, b)))
-    } else {
-        Err(TError(f!("Overflow during addition, \
-                       ({:?} + {:?}).", a, b)))
-    }
-}
-
-/// A generalized error type that represent errors related to the choice of 
-/// index type (also, array value type) used in the suffix array and LCP array 
-/// construction.
-/// 
-#[derive(Debug)]
-pub struct TError(String);
-
-impl Error for TError { }
-
-impl Display for TError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.0)
-    }
+    idx(a)?.checked_add(idx(b)?).and_then(|c| tval(c))
 }
 
 #[cfg(test)]
@@ -373,16 +331,6 @@ mod tests {
     fn test_string_too_large_for_u8() {
         let s = "banana".repeat(500);
 
-        if let Err(e) = create_suffix_array::<u8>(&s) {
-            // The function should trap the errors and return them in the 
-            // result. If a panic occurs during conversion, then there's a bug 
-            // in the code.
-            println!("\n{}", e);
-        } else {
-            panic!("Expected an error!");
-        }
+        assert_eq!(create_suffix_array::<u8>(&s), None);
     }
 }
-
-
-

@@ -44,10 +44,10 @@ use suffix_array::*;
 
 let target = "banana";
 
-if let Ok(sa) = create_suffix_array::<u8>(target) {
+if let Some(sa) = create_suffix_array::<u8>(target) {
 
     let lcp = create_lcp(target, &sa).unwrap();
-    
+
     assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
     assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
 
