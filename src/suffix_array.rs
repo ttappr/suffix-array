@@ -1,6 +1,7 @@
 use core::ops::{AddAssign, SubAssign, Sub, Add};
-use core::fmt::{self, Debug};
+use core::fmt::{self, Debug, Display};
 use core::iter::once;
+use core::error::Error;
 
 const ALPHABET: usize = 256;
 
@@ -209,14 +210,20 @@ where
     n.try_into().map_err(|e| CastError(format!("{:?}", e)))
 }
 
+#[derive(Debug)]
 pub struct CastError(pub String);
 
-impl Debug for CastError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.0)
+impl Error for CastError {
+    fn description(&self) -> &str {
+        &self.0
     }
 }
 
+impl Display for CastError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[cfg(test)]
 mod tests {
