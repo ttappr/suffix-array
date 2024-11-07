@@ -10,7 +10,8 @@ const ALPHABET: usize = 256;
 /// string.
 /// 
 /// # Arguments
-/// * `s`: A mutable reference to a string.
+/// * `s`: A reference to a string. The string will be treated as if it has a
+///        final b'\0' byte, which produces a suffix array of length n + 1.
 /// 
 /// # Generic Types
 /// * `T`: The type of the elements in the suffix array. Expected to be one of
