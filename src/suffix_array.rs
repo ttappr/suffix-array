@@ -365,6 +365,13 @@ mod tests {
             assert_eq!(ss, "suffix array");
         }
     }
+
+    #[test]
+    #[should_panic]
+    fn test_string_too_large_for_u8() {
+        let s = "banana".repeat(100_000);
+        create_suffix_array::<u8>(&s).expect("Overflow error!");
+    }
 }
 
 
