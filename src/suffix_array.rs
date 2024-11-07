@@ -26,7 +26,7 @@ const ALPHABET: usize = 256;
 /// 
 pub (crate) fn sort_cyclic_shifts<T>(s: &str) -> Option<Vec<T>>
 where
-    T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
+    T: AddAssign + Copy + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
 {
     let zero_t  = T::default();
@@ -45,10 +45,10 @@ where
     }
 
     for &ch in s.iter().chain(once(&0)) {
-        cnt[ch as usize] = fallable_add(cnt[ch as usize], one_t)?;
+        cnt[ch as usize] = checked_add(cnt[ch as usize], one_t)?;
     }
     for i in 1..ALPHABET {
-        cnt[i] = fallable_add(cnt[i], cnt[i - 1])?;
+        cnt[i] = checked_add(cnt[i], cnt[i - 1])?;
     }
     for (i, &ch) in s.iter().chain(once(&0)).enumerate() {
         cnt[ch as usize] -= one_t;
@@ -78,10 +78,10 @@ where
 
         for i in 0..n {
             let v = &mut cnt[idx(c[idx(pn[i])?])?];
-            *v = fallable_add(*v, one_t)?;
+            *v = checked_add(*v, one_t)?;
         }
         for i in 1..classes {
-            cnt[i] = fallable_add(cnt[i], cnt[i - 1])?;
+            cnt[i] = checked_add(cnt[i], cnt[i - 1])?;
         }
         for i in (0..n).rev() {
             let v = &mut cnt[idx(c[idx(pn[i])?])?];
@@ -127,7 +127,7 @@ where
 /// 
 pub fn create_suffix_array<T>(s: &str) -> Option<Vec<T>>
 where
-    T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
+    T: AddAssign + Copy + Default + TryFrom<usize> 
         + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
 {
     Some(sort_cyclic_shifts(s)?[1..].to_vec())
@@ -210,9 +210,9 @@ where
 /// 
 #[allow(dead_code)]
 #[inline(always)]
-fn fallable_sub<T>(a: T, b: T) -> Option<T>
+fn checked_sub<T>(a: T, b: T) -> Option<T>
 where
-    T: TryInto<usize> + TryFrom<usize> + Sub<Output=T> + Debug + Copy,
+    T: TryInto<usize> + TryFrom<usize>
 {
     idx(a)?.checked_sub(idx(b)?).and_then(|c| tval(c))
 }
@@ -221,9 +221,9 @@ where
 /// overflows.
 /// 
 #[inline(always)]
-fn fallable_add<T>(a: T, b: T) -> Option<T>
+fn checked_add<T>(a: T, b: T) -> Option<T>
 where
-    T: TryInto<usize> + TryFrom<usize> + Add<Output=T> + Debug + Copy,
+    T: TryInto<usize> + TryFrom<usize>
 {
     idx(a)?.checked_add(idx(b)?).and_then(|c| tval(c))
 }
