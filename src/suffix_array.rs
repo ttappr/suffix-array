@@ -316,7 +316,8 @@ mod tests {
         use std::cmp::Ordering::{self, *};
 
         // Read the contents of the file. The file is more than 2^16 bytes long.
-        let mut s = fs::read_to_string("./data/sample.txt").unwrap();
+        let mut s = fs::read_to_string("./data/sample_65536_bytes.txt")
+                    .unwrap();
 
         // String to find all occurrence of.
         let t = "suffix array".as_bytes();
@@ -358,6 +359,10 @@ mod tests {
         let start = sa.binary_search_by(start_fn).unwrap_err();
         let end   = sa.binary_search_by(end_fn).unwrap_err();
 
+        // There are 157 occurrences of "suffix array" in the target string 
+        // after it is truncated to 65524 bytes.
+        assert_eq!(end - start, 157);
+
         // Verify that the indices from the suffix array all index the target
         // string.
         for i in start..end {
@@ -375,7 +380,7 @@ mod tests {
             // The function should trap the errors and return them in the 
             // result. If a panic occurs during conversion, then there's a bug 
             // in the code.
-            println!("{}", e);
+            println!("\n{}", e);
         } else {
             panic!("Expected an error!");
         }
