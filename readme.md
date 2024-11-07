@@ -36,15 +36,26 @@ index of the target string.
    - Space complexity: O(n)
 
 ## Examples
+
+Suffix array and LCP array construction using `u8` as the index type.
+
 ```rust
 use suffix_array::*;
 
-let s   = "banana";
-let sa  = create_suffix_array::<u8>(s).unwrap();
-let lcp = create_lcp(s, &sa).unwrap();
+let target = "banana";
 
-assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
-assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+if let Ok(sa) = create_suffix_array::<u8>(target) {
+
+    let lcp = create_lcp(target, &sa).unwrap();
+    
+    assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
+    assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+
+} else {
+
+    panic!("The index type u8 was too small for the target string.");
+
+}
 ```
 
 ## References
