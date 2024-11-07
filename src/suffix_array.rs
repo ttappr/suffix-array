@@ -79,7 +79,8 @@ where
         cnt[0..classes].fill(zero_t);
 
         for i in 0..n {
-            cnt[idx(c[idx(pn[i])?])?] += one_t;
+            let v = &mut cnt[idx(c[idx(pn[i])?])?];
+            *v = fallable_add(*v, one_t)?;
         }
         for i in 1..classes {
             cnt[i] = fallable_add(cnt[i], cnt[i - 1])?;
@@ -368,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_string_too_large_for_u8() {
-        let s = "banana".repeat(100_000);
+        let s = "banana".repeat(500);
 
         if let Err(e) = create_suffix_array::<u8>(&s) {
             // The function should trap the errors and return them in the 
