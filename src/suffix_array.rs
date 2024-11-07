@@ -1,5 +1,4 @@
-use core::ops::{AddAssign, SubAssign, Sub, Add};
-use core::fmt::Debug;
+use core::ops::{AddAssign, SubAssign, Sub};
 use core::iter::once;
 use core::mem::swap;
 
@@ -153,8 +152,7 @@ where
 /// 
 pub fn create_lcp<T>(s: &str, p: &[T]) -> Option<Vec<T>>
 where
-    T: Add<Output=T> + AddAssign + Copy + Debug + Default + TryFrom<usize> 
-        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
+    T: Copy + Default + TryFrom<usize> + TryInto<usize>,
 {
     let zero = T::default();
     let n    = s.len();
