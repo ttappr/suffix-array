@@ -1,5 +1,6 @@
 use core::ops::{AddAssign, SubAssign, Sub, Add};
 use core::fmt::Debug;
+use core::iter::once;
 
 const ALPHABET: usize = 256;
 
@@ -66,13 +67,13 @@ where
         [$i:expr] => { s.get($i).map_or(0, |&v| v) }
     }
 
-    for &ch in s.iter().chain([&0]) {
+    for &ch in s.iter().chain(once(&0)) {
         cnt[ch as usize] += one_t;
     }
     for i in 1..ALPHABET {
         cnt[i] = cnt[i] + cnt[i - 1];
     }
-    for (i, &ch) in s.iter().chain([&0]).enumerate() {
+    for (i, &ch) in s.iter().chain(once(&0)).enumerate() {
         cnt[ch as usize] -= one_t;
         p[idx(cnt[ch as usize])] = tval(i);
     }
