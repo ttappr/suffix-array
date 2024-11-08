@@ -25,8 +25,8 @@ const ALPHABET: usize = 256;
 /// 
 pub (crate) fn sort_cyclic_shifts<T>(s: &str) -> Option<Vec<T>>
 where
-    T: AddAssign + Copy + Default + TryFrom<usize> 
-        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
+    T: AddAssign + Copy + Default + TryFrom<usize> +
+       TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
 {
     let zero_t  = T::default();
     let one_t   = tval(1)?;
@@ -126,8 +126,8 @@ where
 /// 
 pub fn create_suffix_array<T>(s: &str) -> Option<Vec<T>>
 where
-    T: AddAssign + Copy + Default + TryFrom<usize> 
-        + TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
+    T: AddAssign + Copy + Default + TryFrom<usize> +
+       TryInto<usize> + PartialEq + Sub<Output=T> + SubAssign,
 {
     Some(sort_cyclic_shifts(s)?[1..].to_vec())
 }
@@ -243,6 +243,17 @@ mod tests {
     }
 
     #[test]
+    fn test_u16_arrays() {
+        let s = "banana";
+
+        let sa  = create_suffix_array::<u16>(s).unwrap();
+        let lcp = create_lcp(&s, &sa).unwrap();
+
+        assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
+        assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
+    }
+
+    #[test]
     fn test_u32_arrays() {
         let s = "banana";
 
@@ -252,7 +263,7 @@ mod tests {
         assert_eq!(sa,  vec![5, 3, 1, 0, 4, 2]);
         assert_eq!(lcp, vec![1, 3, 0, 0, 2]);
     }
-
+    
     #[test]
     fn test_usize_arrays() {
         let s = "banana";
