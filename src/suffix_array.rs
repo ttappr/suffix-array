@@ -148,7 +148,7 @@ where
 /// # Returns
 /// A vector of integers representing the LCP array of the string, or 
 /// `None` if the conversion of the indices to type `T` (or vice versa)
-/// fails during construction.
+/// fails during construction, or `p` contains invalid indices.
 /// 
 pub fn create_lcp<T>(s: &str, p: &[T]) -> Option<Vec<T>>
 where
@@ -162,7 +162,7 @@ where
     let mut k    = 0;
 
     for i in 0..n {
-        rank[idx(p[i])?] = tval(i)?;
+        *rank.get_mut(idx(p[i])?)? = tval(i)?;
     }
     for i in 0..n {
         if idx(rank[i])? == n - 1 {
