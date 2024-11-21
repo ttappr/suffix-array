@@ -301,9 +301,8 @@ mod tests {
         let start_fn = |i: &u16| -> Ordering {
             let i = *i as usize;
             match s.as_bytes()[i..i + n].cmp(t) {
-                Less => Less,
                 Equal => Greater,
-                Greater => Greater,
+                r @ _ => r,
             }
         };
 
@@ -312,9 +311,8 @@ mod tests {
         let end_fn = |i: &u16| -> Ordering {
             let i = *i as usize;
             match s.as_bytes()[i..i + n].cmp(t) {
-                Less => Less,
                 Equal => Less,
-                Greater => Greater,
+                r @ _ => r,
             }
         };
 
